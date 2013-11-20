@@ -15,3 +15,7 @@ def lppl(t, A=569.988, B=-266.943, C=-14.242, tc=1930.218, phi=-4.1,
     second = B*critical_dist
     third = C*critical_dist*np.cos(omega*np.log(tc-t)+phi)
     return first+second+third
+    
+def costfunction(tarray, yarray, model):
+    modelyarray = model(tarray)
+    return np.sum((modelyarray-yarray)**2) / len(tarray)
