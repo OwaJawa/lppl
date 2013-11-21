@@ -6,7 +6,7 @@ Created on Wed Nov 20 15:53:45 2013
 """
 
 import numpy as np
-from lpplmodel import lppl, costfunction
+from lpplmodel import lppl, lppl_costfunction
 from functools import partial
 
 class LPPLGeneticAlgorithm:
@@ -37,6 +37,13 @@ class LPPLGeneticAlgorithm:
         
     def lpplfunc(self, parameters):
         return partial(lppl, A=parameters['A'], B=parameters['B'],
+                       C=parameters['C'], tc=parameters['tc'], 
+                       phi=parameters['phi'], omega=parameters['omega'],
+                       z=parameters['z'])
+                       
+    def lpplcostfunc(self, tarray, yarray, parameters):
+        return partial(lppl_costfunction, tarray=tarray, yarray=yarray,
+                       A=parameters['A'], B=parameters['B'],
                        C=parameters['C'], tc=parameters['tc'], 
                        phi=parameters['phi'], omega=parameters['omega'],
                        z=parameters['z'])
@@ -85,4 +92,30 @@ class LPPLGeneticAlgorithm:
             del pop_indices[idx]
             
         offsprings = []
-        # not finished
+        married_couples = [(selected_parents[i], selected_parents[i+1]) for i in range(0, len(selected_parents), 2)]
+        for couple in married_couples:
+            param1 = parameters_pop[couple[0]]
+            param2 = parameters_pop[couple[1]]
+            offspring = self.breed(param1, param2)
+            offsprings.append(offspring)
+            
+        return offsprings
+        
+    def cull_population(self, parameters_pop, tarray, yarray, size=50):
+        population = len(parameters_pop)
+        if population >= size:
+            return parameters_pop
+        costs = map(partial(self.lpplcostfunc, tarray=tarray, yarray=yarray),
+                    parameters_pop)
+        param_cost_pairs = sorted(zip(parameters_pop, costs), key=lambda item: item[1])
+        return map(lambda item: item[0], param_cost_pairs[1:size])
+        
+    def perform(self, tarray, yarray, size=50, max_iter=50):
+        param_pop = self.generate_init_population(size=size)
+        costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
+        for i in range(max_iter):
+            mut_params = self.mutate_population(param_pop)
+            bre_params = self.breed_population(param_pop)
+            param_pop = self.cull_population(param_pop+mut_params+bre_params,
+                                             tarray, yarray, size=size)
+        return param_pop, costs_iter
