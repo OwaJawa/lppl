@@ -40,13 +40,12 @@ class LPPLGeneticAlgorithm:
                        C=parameters['C'], tc=parameters['tc'], 
                        phi=parameters['phi'], omega=parameters['omega'],
                        z=parameters['z'])
-                       
+    
     def lpplcostfunc(self, tarray, yarray, parameters):
-        return partial(lppl_costfunction, tarray=tarray, yarray=yarray,
-                       A=parameters['A'], B=parameters['B'],
-                       C=parameters['C'], tc=parameters['tc'], 
-                       phi=parameters['phi'], omega=parameters['omega'],
-                       z=parameters['z'])
+        return lppl_costfunction(tarray, yarray, A=parameters['A'], 
+                                 B=parameters['B'], C=parameters['C'], 
+                                 tc=parameters['tc'], phi=parameters['phi'],
+                                 omega=parameters['omega'], z=parameters['z'])
                        
     def mutate(self, parameters):
         mut_parameters = {}
@@ -103,19 +102,25 @@ class LPPLGeneticAlgorithm:
         
     def cull_population(self, parameters_pop, tarray, yarray, size=50):
         population = len(parameters_pop)
-        if population >= size:
+        if population <= size:
             return parameters_pop
-        costs = map(partial(self.lpplcostfunc, tarray=tarray, yarray=yarray),
+        costs = map(lambda param: self.lpplcostfunc(tarray, yarray, param),
                     parameters_pop)
         param_cost_pairs = sorted(zip(parameters_pop, costs), key=lambda item: item[1])
-        return map(lambda item: item[0], param_cost_pairs[1:size])
+        return map(lambda item: item[0], param_cost_pairs[0:size])
         
-    def perform(self, tarray, yarray, size=50, max_iter=50):
+    def reproduce(self, tarray, yarray, param_pop, size=50):
+        mut_params = self.mutate_population(param_pop)
+        bre_params = self.breed_population(param_pop)
+        new_param_pop = self.cull_population(param_pop+mut_params+bre_params,
+                                             tarray, yarray, size=size)
+        return new_param_pop
+        
+    def perform(self, tarray, yarray, size=50, max_iter=1000):
         param_pop = self.generate_init_population(size=size)
         costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
         for i in range(max_iter):
-            mut_params = self.mutate_population(param_pop)
-            bre_params = self.breed_population(param_pop)
-            param_pop = self.cull_population(param_pop+mut_params+bre_params,
-                                             tarray, yarray, size=size)
+            param_pop = self.reproduce(tarray, yarray, param_pop, size=size)
+            cost = self.lpplcostfunc(tarray, yarray, param_pop[0])
+            costs_iter.append(cost)
         return param_pop, costs_iter
