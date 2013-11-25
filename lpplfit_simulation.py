@@ -12,7 +12,7 @@ from lpplfit import LPPLGeneticAlgorithm
 
 def generate_simulated_data(tc, size=500, A=569.988, B=-266.943, C=-14.242,
                             phi=-4.1, omega=7.877, z=0.445):
-    tarray = np.array(sorted(np.random.uniform(low=tc-10, high=tc+1, size=size)))
+    tarray = np.array(sorted(np.random.uniform(low=tc-5, high=tc+1, size=size)))
     critical_stock = lppl(tc-0.05, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z)
     fnc = lambda t: lppl(t, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z) if t<tc else critical_stock*np.random.uniform()
     yarray = np.array(map(fnc, tarray))
@@ -22,12 +22,14 @@ def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1,
              omega=7.877, z=0.445, max_iter=1000):
     fitalg = LPPLGeneticAlgorithm()
     
-    tarray, yarray = generate_simulated_data(tc)
+    tarray, yarray = generate_simulated_data(tc, size=size, A=A, B=B, C=C,
+                                             phi=phi, omega=omega, z=z)
     
-    param_pop = fitalg.generate_init_population(size=size)
+    param_pop = fitalg.generate_init_population(tarray, size=size)
     costs_iter = [fitalg.lpplcostfunc(tarray, yarray, param_pop[0])]
     for i in range(max_iter):
-        param_pop = fitalg.reproduce(tarray, yarray, param_pop, size=size)
+        param_pop = fitalg.reproduce(tarray, yarray, param_pop, size=size,
+                                     mutprob=0.75, reproduceprob=0.5)
         cost = fitalg.lpplcostfunc(tarray, yarray, param_pop[0])
         costs_iter.append(cost)
         print 'iteration ', i, '\tcost = ', cost
@@ -35,4 +37,4 @@ def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1,
     print param_pop[0]
     
 if __name__ == '__main__':
-    simulate(1930)
+    simulate(1930, size=200, max_iter=200)
