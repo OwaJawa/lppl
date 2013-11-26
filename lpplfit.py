@@ -6,6 +6,7 @@ Created on Wed Nov 20 15:53:45 2013
 """
 
 import numpy as np
+import scipy as sp
 from lpplmodel import lppl, lppl_costfunction
 from functools import partial
 
@@ -106,7 +107,8 @@ class LPPLGeneticAlgorithm:
             return parameters_pop
         costs = map(lambda param: self.lpplcostfunc(tarray, yarray, param),
                     parameters_pop)
-        param_cost_pairs = sorted(zip(parameters_pop, costs), key=lambda item: item[1])
+        param_cost_pairs = sorted(zip(parameters_pop, costs), 
+                                  key=lambda item: item[1])
         return map(lambda item: item[0], param_cost_pairs[0:size])
         
     def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.25,
@@ -129,3 +131,23 @@ class LPPLGeneticAlgorithm:
             cost = self.lpplcostfunc(tarray, yarray, param_pop[0])
             costs_iter.append(cost)
         return param_pop, costs_iter
+        
+    def grad_optimize(self, tarray, yarray, parameters):
+        costfunc = lambda paramarray: self.lpplcostfunc(tarray, yarray,
+                                                        {'A': paramarray[0],
+                                                         'B': paramarray[1],
+                                                         'C': paramarray[2],
+                                                         'tc': paramarray[3],
+                                                         'phi': paramarray[4],
+                                                         'omega': paramarray[5],
+                                                         'z': paramarray[6]})
+        init_param_array = np.array([parameters['A'], parameters['B'],
+                                     parameters['C'], parameters['tc'],
+                                     parameters['phi'], parameters['omega'],
+                                     parameters['z']])
+        res = sp.optimize.minimize(costfunc, init_param_array,
+                                   method='nelder-mead')
+        final_param = {'A': res.x[0], 'B': res.x[1], 'C': res.x[2],
+                       'tc': res.x[3], 'phi': res.x[4], 'omega': res.x[5],
+                       'z': res.x[6]}
+        return final_param
