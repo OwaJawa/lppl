@@ -36,5 +36,10 @@ def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1,
         
     print param_pop[0]
     
+    res_param = fitalg.grad_optimize(tarray, yarray, param_pop[0])
+    
+    print res_param
+    print 'cost = ', fitalg.lpplcostfunc(tarray, yarray, res_param)
+    
 if __name__ == '__main__':
     simulate(1930, size=200, max_iter=200)
