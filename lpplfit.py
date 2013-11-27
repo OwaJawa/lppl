@@ -41,6 +41,12 @@ class LPPLGeneticAlgorithm:
                        C=parameters['C'], tc=parameters['tc'], 
                        phi=parameters['phi'], omega=parameters['omega'],
                        z=parameters['z'])
+                       
+    def lppl(self, tarray, parameters):
+        return lppl(tarray, A=parameters['A'], B=parameters['B'],
+                    C=parameters['C'], tc=parameters['tc'], 
+                    phi=parameters['phi'], omega=parameters['omega'],
+                    z=parameters['z'])        
     
     def lpplcostfunc(self, tarray, yarray, parameters):
         return lppl_costfunction(tarray, yarray, A=parameters['A'], 
@@ -107,8 +113,10 @@ class LPPLGeneticAlgorithm:
             return parameters_pop
         costs = map(lambda param: self.lpplcostfunc(tarray, yarray, param),
                     parameters_pop)
-        param_cost_pairs = sorted(zip(parameters_pop, costs), 
-                                  key=lambda item: item[1])
+        param_cost_pairs = zip(parameters_pop, costs)
+        param_cost_pairs = filter(lambda pair: not np.isnan(pair[1]),
+                                  param_cost_pairs)
+        param_cost_pairs = sorted(param_cost_pairs, key=lambda item: item[1])
         return map(lambda item: item[0], param_cost_pairs[0:size])
         
     def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.25,
