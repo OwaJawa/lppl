@@ -6,7 +6,7 @@ Created on Wed Nov 20 15:53:45 2013
 """
 
 import numpy as np
-import scipy as sp
+from scipy.optimize import minimize
 from lpplmodel import lppl, lppl_costfunction
 from functools import partial
 
@@ -16,10 +16,10 @@ class LPPLGeneticAlgorithm:
         self.meanB = -250
         self.meanC = -20
         self.meantc = guesstc
-        self.stdA = 100
+        self.stdA = 50
         self.stdB = 50
         self.stdC = 25
-        self.stdtc = 25
+        self.stdtc = 5
     
     def generate_init_population(self, tarray, size=50):
         init_parameters_pop = []
@@ -145,8 +145,7 @@ class LPPLGeneticAlgorithm:
                                      parameters['C'], parameters['tc'],
                                      parameters['phi'], parameters['omega'],
                                      parameters['z']])
-        res = sp.optimize.minimize(costfunc, init_param_array,
-                                   method='nelder-mead')
+        res = minimize(costfunc, init_param_array, method='nelder-mead')
         final_param = {'A': res.x[0], 'B': res.x[1], 'C': res.x[2],
                        'tc': res.x[3], 'phi': res.x[4], 'omega': res.x[5],
                        'z': res.x[6]}
