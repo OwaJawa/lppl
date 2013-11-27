@@ -18,7 +18,7 @@ def generate_simulated_data(tc, size=500, A=569.988, B=-266.943, C=-14.242,
     yarray = np.array(map(fnc, tarray))
     return tarray, yarray
     
-def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1, 
+def simulate(tc, size=50, A=569.988, B=-266.943, C=-14.242, phi=-4.1, 
              omega=7.877, z=0.445, max_iter=1000):
     fitalg = LPPLGeneticAlgorithm()
     
@@ -42,4 +42,4 @@ def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1,
     print 'cost = ', fitalg.lpplcostfunc(tarray, yarray, res_param)
     
 if __name__ == '__main__':
-    simulate(1930, size=200, max_iter=200)
+    simulate(1930, size=500, max_iter=200)
