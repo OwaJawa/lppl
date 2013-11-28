@@ -29,5 +29,7 @@ def lppl_costfunction(tarray, yarray, A=569.988, B=-266.943, C=-14.242,
     model = partial(lppl, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z)
     peak_y = np.max(filter_yarray) if len(filter_yarray)>0 else 0
     crashedtyarray = filter(lambda item: item[0]>=tc, zip(tarray, yarray))
-    crashed_cost = np.sum(np.array(map(lambda item: (item[1]-peak_y)**2, crashedtyarray))) / len(crashedtyarray)
+    crashed_cost = 0
+    if (len(crashedtyarray) > 0):
+        crashed_cost = np.sum(np.array(map(lambda item: (item[1]-peak_y)**2, crashedtyarray))) / len(crashedtyarray)
     return costfunction(filter_tarray, filter_yarray, model) + crashed_cost
