@@ -9,6 +9,7 @@ import numpy as np
 
 from lpplmodel import lppl
 from lpplfit import LPPLGeneticAlgorithm
+import pylab
 
 def generate_simulated_data(tc, size=500, A=569.988, B=-266.943, C=-14.242,
                             phi=-4.1, omega=7.877, z=0.445):
@@ -18,17 +19,18 @@ def generate_simulated_data(tc, size=500, A=569.988, B=-266.943, C=-14.242,
     yarray = np.array(map(fnc, tarray))
     return tarray, yarray
     
-def simulate(tc, size=50, A=569.988, B=-266.943, C=-14.242, phi=-4.1, 
-             omega=7.877, z=0.445, max_iter=1000):
+def simulate(tc, size=500, A=569.988, B=-266.943, C=-14.242, phi=-4.1, 
+             omega=7.877, z=0.445, max_iter=1000, param_popsize=50):
     fitalg = LPPLGeneticAlgorithm()
     
     tarray, yarray = generate_simulated_data(tc, size=size, A=A, B=B, C=C,
                                              phi=phi, omega=omega, z=z)
     
-    param_pop = fitalg.generate_init_population(tarray, size=size)
+    param_pop = fitalg.generate_init_population(tarray, size=param_popsize)
     costs_iter = [fitalg.lpplcostfunc(tarray, yarray, param_pop[0])]
     for i in range(max_iter):
-        param_pop = fitalg.reproduce(tarray, yarray, param_pop, size=size,
+        param_pop = fitalg.reproduce(tarray, yarray, param_pop,
+                                     size=param_popsize,
                                      mutprob=0.75, reproduceprob=0.5)
         cost = fitalg.lpplcostfunc(tarray, yarray, param_pop[0])
         costs_iter.append(cost)
@@ -40,6 +42,10 @@ def simulate(tc, size=50, A=569.988, B=-266.943, C=-14.242, phi=-4.1,
     
     print res_param
     print 'cost = ', fitalg.lpplcostfunc(tarray, yarray, res_param)
+    
+    pylab.plot(tarray, yarray)
+    pylab.plot(tarray, fitalg.lppl(tarray, res_param))
+    pylab.savefig('theory_sim.png')
     
 if __name__ == '__main__':
     simulate(1930, size=500, max_iter=200)
