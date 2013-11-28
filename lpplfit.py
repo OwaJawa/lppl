@@ -21,15 +21,20 @@ class LPPLGeneticAlgorithm:
         self.stdC = 25
         self.stdtc = 5
     
-    def generate_init_population(self, tarray, size=50):
+    def generate_init_population(self, tarray, yarray=None, size=50):
         init_parameters_pop = []
         for i in range(size):
             parameters = {}
             parameters['A'] = np.random.normal(loc=self.meanA, scale=self.stdA)
             parameters['B'] = np.random.normal(loc=self.meanB, scale=self.stdB)
             parameters['C'] = np.random.normal(loc=self.meanC, scale=self.stdC)
-            parameters['tc'] = np.random.uniform(low=np.min(tarray),
-                                                 high=np.max(tarray))
+            if yarray == None or len(tarray)!=len(yarray):
+                parameters['tc'] = np.random.uniform(low=np.min(tarray),
+                                                     high=np.max(tarray))
+            else:
+                expectedtc, peaky = max(zip(tarray, yarray),
+                                         key=lambda item: item[1])
+                parameters['tc'] = np.random.normal(loc=expectedtc, scale=0.2)                
             parameters['phi'] = np.random.normal()
             parameters['omega'] = np.random.normal(loc=np.pi*2)
             parameters['z'] = np.random.uniform()
@@ -108,16 +113,16 @@ class LPPLGeneticAlgorithm:
         return offsprings
         
     def cull_population(self, parameters_pop, tarray, yarray, size=50):
-        population = len(parameters_pop)
-        if population <= size:
-            return parameters_pop
         costs = map(lambda param: self.lpplcostfunc(tarray, yarray, param),
                     parameters_pop)
         param_cost_pairs = zip(parameters_pop, costs)
         param_cost_pairs = filter(lambda pair: not np.isnan(pair[1]),
                                   param_cost_pairs)
         param_cost_pairs = sorted(param_cost_pairs, key=lambda item: item[1])
-        return map(lambda item: item[0], param_cost_pairs[0:size])
+        if (len(param_cost_pairs) < size):
+            return map(lambda item: item[0], param_cost_pairs)
+        else:
+            return map(lambda item: item[0], param_cost_pairs[0:size])
         
     def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.25,
                   reproduceprob=0.5):
