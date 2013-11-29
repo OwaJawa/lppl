@@ -133,7 +133,7 @@ class LPPLGeneticAlgorithm:
                                              tarray, yarray, size=size)
         return new_param_pop
         
-    def perform(self, tarray, yarray, size=50, max_iter=1000, mutprob=0.25,
+    def perform(self, tarray, yarray, size=50, max_iter=1000, mutprob=0.75,
                 reproduceprob=0.5):
         param_pop = self.generate_init_population(tarray, size=size)
         costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
