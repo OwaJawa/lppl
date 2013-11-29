@@ -124,7 +124,7 @@ class LPPLGeneticAlgorithm:
         else:
             return map(lambda item: item[0], param_cost_pairs[0:size])
         
-    def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.25,
+    def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.75,
                   reproduceprob=0.5):
         mut_params = self.mutate_population(param_pop, mutprob=mutprob)
         bre_params = self.breed_population(param_pop, 
