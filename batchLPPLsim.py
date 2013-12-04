@@ -35,7 +35,12 @@ def simulation1(outputfilename):
     mutprobs = [0.25, 0.5, 0.75]
     reproduceprobs = [0.25, 0.5, 0.75]
     max_iters = [50, 100, 150]
-    param_popsizes = [50, 100, 500]
+    #param_popsizes = [50, 100, 150]
+    param_popsizes = [250, 500]
+    '''
+    tranges = [(2010, 2012), (2011, 2012), (2010, 2012.5), (2011, 2012.5),
+               (2009, 2012)]
+    '''
     tranges = [(2010, 2012), (2011, 2012), (2010, 2012.5), (2011, 2012.5)]
     for trange in tranges:
         for max_iter in max_iters:
@@ -55,7 +60,37 @@ def simulation1(outputfilename):
                         i += 1
     f.close()
         
+def repeated_simulation(outputfilename, repeatnum=10):
+    header = ['ID', 'mutprob', 'reproduceprob', 'max_iter', 'param_popsize',
+              'lowt', 'hit', 'tc', 'fit tc']
+    f = open(outputfilename, 'wb')
+    writer = csv.writer(f)
+    writer.writerow(header)
+    i = 0
+    mutprobs = [0.75]
+    reproduceprobs = [0.25]
+    max_iters = [100, 150]
+    param_popsizes = [250, 500]
+    tranges = [(2009, 2012), (2011, 2012.5)]
+    for trange in tranges:
+        for max_iter in max_iters:
+            for mutprob in mutprobs:
+                for reproduceprob in reproduceprobs:
+                    for param_popsize in param_popsizes:
+                        print 'Doing simulation ', i
+                        for i in range(repeatnum):
+                            resparam, cost = dat_simulate(2013, lowt=trange[0],
+                                                          hit=trange[1], size=500,
+                                                          mutprob=mutprob,
+                                                          reproduceprob=reproduceprob,
+                                                          max_iter=max_iter,
+                                                          param_popsize=param_popsize)
+                            writer.writerow([i, mutprob, reproduceprob, max_iter,
+                                             param_popsize, trange[0], trange[1],
+                                             2013, resparam['tc']])
+                            i += 1
+    f.close()
     
 if __name__ == '__main__':
     #print dat_simulate(2013, lowt=2010, hit=2012)
-    simulation1('simulation1.csv')
+    repeated_simulation('repeated_simulation1.csv')
