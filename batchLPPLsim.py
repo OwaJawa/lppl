@@ -77,8 +77,8 @@ def repeated_simulation(outputfilename, repeatnum=10):
             for mutprob in mutprobs:
                 for reproduceprob in reproduceprobs:
                     for param_popsize in param_popsizes:
-                        print 'Doing simulation ', i
-                        for i in range(repeatnum):
+                        for j in range(repeatnum):
+                            print 'Doing simulation ', i
                             resparam, cost = dat_simulate(2013, lowt=trange[0],
                                                           hit=trange[1], size=500,
                                                           mutprob=mutprob,
