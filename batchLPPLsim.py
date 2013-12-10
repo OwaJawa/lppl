@@ -60,7 +60,7 @@ def simulation1(outputfilename):
                         i += 1
     f.close()
         
-def repeated_simulation(outputfilename, repeatnum=10):
+def repeated_simulation1(outputfilename, repeatnum=10):
     header = ['ID', 'mutprob', 'reproduceprob', 'max_iter', 'param_popsize',
               'lowt', 'hit', 'tc', 'fit tc']
     f = open(outputfilename, 'wb')
@@ -91,6 +91,38 @@ def repeated_simulation(outputfilename, repeatnum=10):
                             i += 1
     f.close()
     
+def repeated_simulation2(outputfilename, repeatnum=30):
+    header = ['ID', 'mutprob', 'reproduceprob', 'max_iter', 'param_popsize',
+              'lowt', 'hit', 'tc', 'fit tc']
+    f = open(outputfilename, 'wb')
+    writer = csv.writer(f)
+    writer.writerow(header)
+    i = 0
+    mutprobs = [0.75]
+    reproduceprobs = [0.25]
+    max_iters = [150]
+    param_popsizes = [250, 500]
+    tranges = [(2009, 2012), (2011, 2012.5)]
+    for trange in tranges:
+        for max_iter in max_iters:
+            for mutprob in mutprobs:
+                for reproduceprob in reproduceprobs:
+                    for param_popsize in param_popsizes:
+                        for j in range(repeatnum):
+                            print 'Doing simulation ', i
+                            resparam, cost = dat_simulate(2013, lowt=trange[0],
+                                                          hit=trange[1], size=500,
+                                                          mutprob=mutprob,
+                                                          reproduceprob=reproduceprob,
+                                                          max_iter=max_iter,
+                                                          param_popsize=param_popsize)
+                            writer.writerow([i, mutprob, reproduceprob, max_iter,
+                                             param_popsize, trange[0], trange[1],
+                                             2013, resparam['tc']])
+                            i += 1
+    f.close()
+    
 if __name__ == '__main__':
     #print dat_simulate(2013, lowt=2010, hit=2012)
-    repeated_simulation('repeated_simulation1.csv')
+    #repeated_simulation1('repeated_simulation1.csv')
+    repeated_simulation2('repeated_simulation2.csv', repeatnum=20)
