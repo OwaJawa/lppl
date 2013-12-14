@@ -81,7 +81,7 @@ class LPPLGeneticAlgorithm:
             offspring[field] = 0.5 * (param1[field]+param2[field])
         return offspring
                        
-    def mutate_population(self, parameters_pop, mutprob=0.25):
+    def mutate_population(self, parameters_pop, mutprob=0.75):
         mut_param_pop = []
         for parameters in parameters_pop:
             rnd = np.random.uniform()
@@ -89,7 +89,7 @@ class LPPLGeneticAlgorithm:
                 mut_param_pop.append(self.mutate(parameters))
         return mut_param_pop
         
-    def breed_population(self, parameters_pop, reproduceprob=0.5):
+    def breed_population(self, parameters_pop, reproduceprob=0.25):
         population = len(parameters_pop)
         num_parents = int(population*reproduceprob)
         if num_parents % 2 == 1:
@@ -112,7 +112,7 @@ class LPPLGeneticAlgorithm:
             
         return offsprings
         
-    def cull_population(self, parameters_pop, tarray, yarray, size=50):
+    def cull_population(self, parameters_pop, tarray, yarray, size=500):
         costs = map(lambda param: self.lpplcostfunc(tarray, yarray, param),
                     parameters_pop)
         param_cost_pairs = zip(parameters_pop, costs)
@@ -124,8 +124,8 @@ class LPPLGeneticAlgorithm:
         else:
             return map(lambda item: item[0], param_cost_pairs[0:size])
         
-    def reproduce(self, tarray, yarray, param_pop, size=50, mutprob=0.75,
-                  reproduceprob=0.5):
+    def reproduce(self, tarray, yarray, param_pop, size=500, mutprob=0.75,
+                  reproduceprob=0.25):
         mut_params = self.mutate_population(param_pop, mutprob=mutprob)
         bre_params = self.breed_population(param_pop, 
                                            reproduceprob=reproduceprob)
@@ -133,8 +133,8 @@ class LPPLGeneticAlgorithm:
                                              tarray, yarray, size=size)
         return new_param_pop
         
-    def perform(self, tarray, yarray, size=50, max_iter=1000, mutprob=0.75,
-                reproduceprob=0.5):
+    def perform(self, tarray, yarray, size=500, max_iter=150, mutprob=0.75,
+                reproduceprob=0.25):
         param_pop = self.generate_init_population(tarray, size=size)
         costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
         for i in range(max_iter):
