@@ -10,8 +10,8 @@ from lpplfit import LPPLGeneticAlgorithm
 import pylab
     
 def simulate(tc, lowt=None, hit=None, size=500, A=569.988, B=-266.943, 
-             C=-14.242, phi=-4.1, omega=7.877, z=0.445, max_iter=1000, 
-             param_popsize=100):
+             C=-14.242, phi=-4.1, omega=7.877, z=0.445, max_iter=150, 
+             param_popsize=500):
     fitalg = LPPLGeneticAlgorithm()
     
     tarray, yarray = generate_simulated_data(tc, lowt=lowt, hit=hit, size=size,
@@ -23,7 +23,7 @@ def simulate(tc, lowt=None, hit=None, size=500, A=569.988, B=-266.943,
     for i in range(max_iter):
         param_pop = fitalg.reproduce(tarray, yarray, param_pop,
                                      size=param_popsize,
-                                     mutprob=0.75, reproduceprob=0.5)
+                                     mutprob=0.75, reproduceprob=0.25)
         cost = fitalg.lpplcostfunc(tarray, yarray, param_pop[0])
         costs_iter.append(cost)
         print 'iteration ', i, '\tcost = ', cost
@@ -40,4 +40,4 @@ def simulate(tc, lowt=None, hit=None, size=500, A=569.988, B=-266.943,
     pylab.savefig('theory_sim.png')
     
 if __name__ == '__main__':
-    simulate(2013, lowt=2010, hit=2012, size=500, max_iter=90)
+    simulate(2013, lowt=2010, hit=2012)
