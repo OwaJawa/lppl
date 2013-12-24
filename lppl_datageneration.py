@@ -22,7 +22,7 @@ def generate_simulated_data(tc, lowt=None, hit=None,
     return tarray, yarray
     
 def write_simulated_data(filename, tc):
-    tarray, yarray = generate_simulated_data(tc)
+    tarray, yarray = generate_simulated_data(tc, lowt=tc-3, hit=tc-0.5)
     data = map(lambda t, y: (t, y), tarray, yarray)
     np.savetxt(filename, data, fmt='%.2f')
     
