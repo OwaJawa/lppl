@@ -20,3 +20,11 @@ def generate_simulated_data(tc, lowt=None, hit=None,
     fnc = lambda t: lppl(t, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z) if t<tc else critical_stock*np.random.uniform()
     yarray = np.array(map(fnc, tarray))
     return tarray, yarray
+    
+def write_simulated_data(filename, tc):
+    tarray, yarray = generate_simulated_data(tc)
+    data = map(lambda t, y: (t, y), tarray, yarray)
+    np.savetxt(filename, data, fmt='%.2f')
+    
+if __name__ == '__main__':
+    write_simulated_data('test.dat', 2013)
