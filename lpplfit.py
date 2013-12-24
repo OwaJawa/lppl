@@ -20,7 +20,7 @@ class LPPLGeneticAlgorithm:
         self.stdC = 25
         self.stdtc = 5
     
-    def generate_init_population(self, tarray, yarray=None, size=50):
+    def generate_init_population(self, tarray, yarray=None, size=500):
         init_parameters_pop = []
         for i in range(size):
             parameters = {}
