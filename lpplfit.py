@@ -40,6 +40,12 @@ class LPPLGeneticAlgorithm:
             init_parameters_pop.append(parameters)
         return init_parameters_pop
 
+    def lppl(self, tarray, parameters):
+        return lppl(tarray, A=parameters['A'], B=parameters['B'],
+                    C=parameters['C'], tc=parameters['tc'], 
+                    phi=parameters['phi'], omega=parameters['omega'],
+                    z=parameters['z'])        
+
     def lpplcostfunc(self, tarray, yarray, parameters):
         return lppl_costfunction(tarray, yarray, A=parameters['A'], 
                                  B=parameters['B'], C=parameters['C'], 
