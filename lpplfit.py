@@ -8,7 +8,6 @@ Created on Wed Nov 20 15:53:45 2013
 import numpy as np
 from scipy.optimize import minimize
 from lpplmodel import lppl, lppl_costfunction
-from functools import partial
 
 class LPPLGeneticAlgorithm:
     def __init__(self, guesstc=1980):
@@ -40,19 +39,7 @@ class LPPLGeneticAlgorithm:
             parameters['z'] = np.random.uniform()
             init_parameters_pop.append(parameters)
         return init_parameters_pop
-        
-    def lpplfunc(self, parameters):
-        return partial(lppl, A=parameters['A'], B=parameters['B'],
-                       C=parameters['C'], tc=parameters['tc'], 
-                       phi=parameters['phi'], omega=parameters['omega'],
-                       z=parameters['z'])
-                       
-    def lppl(self, tarray, parameters):
-        return lppl(tarray, A=parameters['A'], B=parameters['B'],
-                    C=parameters['C'], tc=parameters['tc'], 
-                    phi=parameters['phi'], omega=parameters['omega'],
-                    z=parameters['z'])        
-    
+
     def lpplcostfunc(self, tarray, yarray, parameters):
         return lppl_costfunction(tarray, yarray, A=parameters['A'], 
                                  B=parameters['B'], C=parameters['C'], 
