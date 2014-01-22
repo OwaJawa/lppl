@@ -10,16 +10,44 @@ import numpy as np
 import argparse
 from datetime import datetime as dt
 
-def toYearFraction(year, month, day):
+def DiscreteDaytoYearFraction(year, month, day):
     wholeyear = dt(year+1, 1, 1).toordinal() - dt(year, 1, 1).toordinal()
     fraction = dt(year, month, day).toordinal() - dt(year, 1, 1).toordinal()
     return year + float(fraction)/float(wholeyear)
 
-def readData(filename, header=False):
+def toContinuousYear(datestr, delimiter='/'):
+    month, day, year = map(int, datestr.split(delimiter))
+    if year < 100:
+        year += 1900 if year>=70 else 2000
+    return DiscreteDaytoYearFraction(year, month, day)
+
+def readRawYearFractionData(filename, header=False):
     data = np.loadtxt(filename, unpack=True, skiprows=1 if header else 0,
                       usecols=(0, 1), dtype={'names': ('year', 'price'),
                                              'formats': (np.float, np.float)})
     (tarray, yarray) = data
+    return tarray, yarray
+    
+def readStrYearFractionData(filename, header=True):
+    data = np.loadtxt(filename, unpack=True, skiprows=1 if header else 0,
+                      usecols=(0, 1), dtype={'names': ('year', 'price'),
+                                             'formats': ('S20', np.float)},
+                      delimiter=',')
+    yarray = data[1]
+    tarray = np.array(map(toContinuousYear, data[0]))
+    return tarray, yarray
+    
+def readData(filename, decimal_year=True, lowlimit=None, uplimit=None):
+    data = readRawYearFractionData(filename) if decimal_year else readStrYearFractionData(filename)
+    if lowlimit==None:
+        lowlimit = min(data[0])
+    if uplimit==None:
+        uplimit = max(data[0])
+    data = zip(data[0], data[1])
+    data = filter(lambda datum: datum[0]>=lowlimit and datum[0]<=uplimit,
+                  data)
+    tarray = np.array(map(lambda datum: datum[0], data))
+    yarray = np.array(map(lambda datum: datum[1], data))
     return tarray, yarray
 
 def get_argvparser():
@@ -29,6 +57,9 @@ def get_argvparser():
     argv_parser = argparse.ArgumentParser(description=prog_descp)
     argv_parser.add_argument('filename',
                              help='the name of the file for fitting')
+    argv_parser.add_argument('--stringdate',
+                             help='date given with month and date instead of decimal years',
+                             action='store_true')
     argv_parser.add_argument('--parampopsize', type=int, default=500,
                              help='number of sets of parameters (default=500)')
     argv_parser.add_argument('--maxiter', type=int, default=150,
@@ -37,13 +68,26 @@ def get_argvparser():
                              help='mutation probability (between 0 and 1, default=0.75)')
     argv_parser.add_argument('--reproduceprob', type=float, default=0.25,
                              help='breeding probability (between 0 and 1, default=0.25)')
+    argv_parser.add_argument('--lowlimit', type=str, default=None,
+                             help='lower limit (default=None)')
+    argv_parser.add_argument('--uplimit', type=str, default=None,
+                             help='upper limit (default=None)')
     return argv_parser
     
 if __name__ == '__main__':
     argv_parser = get_argvparser()
-    args = argv_parser.parse_args()
+    args = argv_parser.parse_args()    
     
-    tarray, yarray = readData(args.filename)
+    if args.stringdate:
+        lowlimit = None if args.lowlimit==None else toContinuousYear(args.lowlimit) 
+        uplimit = None if args.uplimit==None else toContinuousYear(args.uplimit)
+    else:
+        lowlimit = None if args.lowlimit==None else float(args.lowlimit)
+        uplimit = None if args.uplimit==None else float(args.uplimit)
+    
+    tarray, yarray = readData(args.filename, 
+                              decimal_year=(not args.stringdate),
+                              lowlimit=lowlimit, uplimit=uplimit)
     
     fitalg = LPPLGeneticAlgorithm()
     param_pop, costs_iter = fitalg.perform(tarray, yarray, 
