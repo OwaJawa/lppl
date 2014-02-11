@@ -89,13 +89,18 @@ if __name__ == '__main__':
                               decimal_year=(not args.stringdate),
                               lowlimit=lowlimit, uplimit=uplimit)
     
+    for t, y in zip(tarray, yarray):
+        print t, '\t', y
+    print 'Number of points = ', len(tarray)
+    
     fitalg = LPPLGeneticAlgorithm()
-    param_pop, costs_iter = fitalg.perform(tarray, yarray, 
+    logyarray = np.log(yarray)
+    param_pop, costs_iter = fitalg.perform(tarray, logyarray, 
                                            size=args.parampopsize,
                                            max_iter=args.maxiter,
                                            mutprob=args.mutprob,
                                            reproduceprob=args.reproduceprob)
-    res_param = fitalg.grad_optimize(tarray, yarray, param_pop[0])
+    res_param = fitalg.grad_optimize(tarray, logyarray, param_pop[0])
     
     print 'Results: '
     print 'A = ', res_param['A']
