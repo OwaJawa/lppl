@@ -188,8 +188,10 @@ class LPPLGeneticAlgorithm:
             param_pop = self.generate_init_population(tarray, yarray,
                                                       size=size)
         else:
-            if len(param_pop) != size:
-                raise InconsistentParameterSizeException(size, len(param_pop))
+            if len(init_param_pop) != size:
+                raise InconsistentParameterSizeException(size,
+                                                         len(init_param_pop))
+            param_pop = init_param_pop
                 
         costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
         for i in range(max_iter):
