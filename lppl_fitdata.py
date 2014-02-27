@@ -56,7 +56,9 @@ def lpplfit_workflow(tarray, parray, param_pop_size, max_iter, mutprob,
     fitalg = LPPLGeneticAlgorithm()
     param_pop = fitalg.generate_init_population(tarray, yarray,
                                                 size=param_pop_size)
-    param_pop, costs_iter = fitalg.perform(tarray, yarray, size=param_pop_size,
+    param_pop, costs_iter = fitalg.perform(tarray, yarray, 
+                                           init_param_pop=param_pop,
+                                           size=param_pop_size,
                                            max_iter=max_iter, mutprob=mutprob, 
                                            reproduceprob=reproduceprob)
     res_param = fitalg.grad_optimize(tarray, yarray, param_pop[0])
