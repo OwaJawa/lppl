@@ -50,6 +50,18 @@ def readData(filename, decimal_year=True, lowlimit=None, uplimit=None):
     yarray = np.array(map(lambda datum: datum[1], data))
     return tarray, yarray
 
+def lpplfit_workflow(tarray, parray, param_pop_size, max_iter, mutprob, 
+                     reproduceprob):
+    yarray = np.log(parray)
+    fitalg = LPPLGeneticAlgorithm()
+    param_pop = fitalg.generate_init_population(tarray, yarray,
+                                                size=param_pop_size)
+    param_pop, costs_iter = fitalg.perform(tarray, yarray, size=param_pop_size,
+                                           max_iter=max_iter, mutprob=mutprob, 
+                                           reproduceprob=reproduceprob)
+    res_param = fitalg.grad_optimize(tarray, yarray, param_pop[0])
+    return res_param
+
 def get_argvparser():
     prog_descp = 'Read the financial data from the input file, '
     prog_descp += 'the first column being the year and second column prices, '
@@ -85,22 +97,17 @@ if __name__ == '__main__':
         lowlimit = None if args.lowlimit==None else float(args.lowlimit)
         uplimit = None if args.uplimit==None else float(args.uplimit)
     
-    tarray, yarray = readData(args.filename, 
+    tarray, parray = readData(args.filename, 
                               decimal_year=(not args.stringdate),
                               lowlimit=lowlimit, uplimit=uplimit)
     
-    for t, y in zip(tarray, yarray):
-        print t, '\t', y
+    for t, p in zip(tarray, parray):
+        print t, '\t', p
     print 'Number of points = ', len(tarray)
     
-    fitalg = LPPLGeneticAlgorithm()
-    logyarray = np.log(yarray)
-    param_pop, costs_iter = fitalg.perform(tarray, logyarray, 
-                                           size=args.parampopsize,
-                                           max_iter=args.maxiter,
-                                           mutprob=args.mutprob,
-                                           reproduceprob=args.reproduceprob)
-    res_param = fitalg.grad_optimize(tarray, logyarray, param_pop[0])
+    res_param = lpplfit_workflow(tarray, parray, args.parampopsize,
+                                 args.maxiter, args.mutprob,
+                                 args.reproduceprob)
     
     print 'Results: '
     print 'A = ', res_param['A']
