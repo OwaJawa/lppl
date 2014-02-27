@@ -9,6 +9,12 @@ import numpy as np
 from scipy.optimize import minimize
 from lpplmodel import lppl, lppl_costfunction
 
+class InconsistentParameterSizeException(Exception):
+    def __init__(self, num1, num2):
+        self.num1 = num1
+        self.num2 = num2
+        self.message = 'Inconsistent parameter size: '+str(num1)+' vs. '+str(num2)
+
 class LPPLGeneticAlgorithm:
     def __init__(self, guesstc=1980):
         self.meanA = 600
@@ -176,9 +182,15 @@ class LPPLGeneticAlgorithm:
                                              tarray, yarray, size=size)
         return new_param_pop
         
-    def perform(self, tarray, yarray, size=500, max_iter=150, mutprob=0.75,
+    def perform(self, tarray, yarray, init_param_pop=None, size=500, max_iter=150, mutprob=0.75,
                 reproduceprob=0.25):
-        param_pop = self.generate_init_population(tarray, yarray, size=size)
+        if init_param_pop == None:
+            param_pop = self.generate_init_population(tarray, yarray,
+                                                      size=size)
+        else:
+            if len(param_pop) != size:
+                raise InconsistentParameterSizeException(size, len(param_pop))
+                
         costs_iter = [self.lpplcostfunc(tarray, yarray, param_pop[0])]
         for i in range(max_iter):
             param_pop = self.reproduce(tarray, yarray, param_pop, size=size, 
