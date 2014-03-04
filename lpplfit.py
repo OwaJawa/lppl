@@ -127,9 +127,8 @@ class LPPLGeneticAlgorithm:
     def mutate_population(self, parameters_pop, tarray, yarray, mutprob=0.75):
         return mutate_pop_abstract((self, parameters_pop, tarray, yarray, 
                                     mutprob))
-        
-    def breed_population(self, parameters_pop, tarray, yarray,
-                         reproduceprob=0.25):
+    
+    def match_singles(self, parameters_pop, reproduceprob):    
         population = len(parameters_pop)
         num_parents = int(population*reproduceprob)
         if num_parents % 2 == 1:
@@ -144,6 +143,11 @@ class LPPLGeneticAlgorithm:
             
         married_couples = [(parameters_pop[selected_parents[i]], 
                             parameters_pop[selected_parents[i+1]]) for i in range(0, len(selected_parents), 2)]            
+        return married_couples
+    
+    def breed_population(self, parameters_pop, tarray, yarray,
+                         reproduceprob=0.25):
+        married_couples = self.match_singles(parameters_pop, reproduceprob)
         return breed_married_couples_abstract((self, married_couples,
                                                tarray, yarray))
         
@@ -215,9 +219,11 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
         
     def mutate_population(self, parameters_pop, tarray, yarray, mutprob=0.75):
         numperthread = int(np.ceil(float(len(parameters_pop))/self.numthreads))
-        param_pop_lists = [parameters_pop[idx:min(idx, len(parameters_pop))] for idx in range(0, len(parameters_pop), numperthread)]
+        param_pop_lists = [(self, parameters_pop[idx:min(idx, len(parameters_pop))],
+                            tarray, yarray, 
+                            mutprob) for idx in range(0, len(parameters_pop), numperthread)]
         mutation_workers = Pool(processes=self.numthreads)
-        mut_param_pop_lists = mutation_workers.map(lambda param_pop: super(PoolLPPLGeneticAlgorithm, self).mutate_population(param_pop, tarray, yarray, mutprob=mutprob),
+        mut_param_pop_lists = mutation_workers.map(mutate_pop_abstract,
                                                    param_pop_lists)
         return reduce(add, mut_param_pop_lists)
         
