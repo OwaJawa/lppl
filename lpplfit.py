@@ -17,6 +17,30 @@ class InconsistentParameterSizeException(Exception):
         self.num2 = num2
         self.message = 'Inconsistent parameter size: '+str(num1)+' vs. '+str(num2)
 
+def mutate_pop_abstract((alg, parameters_pop, tarray, yarray, mutprob)):
+    mut_param_pop = []
+    for parameters in parameters_pop:
+        rnd = np.random.uniform()
+        if rnd < mutprob:
+            mut_param_pop.append(alg.mutate(parameters, tarray, yarray))
+    return mut_param_pop
+    
+def breed_married_couples_abstract((alg, married_couples, tarray, yarray)):
+    offsprings = []
+    for couple in married_couples:
+        param1 = couple[0]
+        param2 = couple[1]
+        offspring = alg.breed(param1, param2)
+        linear_parameters = alg.solve_linear_parameters(tarray, yarray,
+                                                        offspring['tc'],
+                                                        offspring['z'],
+                                                        offspring['omega'],
+                                                        offspring['phi'])
+        for param_name in linear_parameters:
+            offspring[param_name] = linear_parameters[param_name]
+        offsprings.append(offspring)
+    return offsprings
+
 class LPPLGeneticAlgorithm:
     def __init__(self):
         self.meanA = 600
@@ -56,9 +80,6 @@ class LPPLGeneticAlgorithm:
         init_parameters_pop = []
         for i in range(size):
             parameters = {}
-            #parameters['A'] = np.random.normal(loc=self.meanA, scale=self.stdA)
-            #parameters['B'] = np.random.normal(loc=self.meanB, scale=self.stdB)
-            #parameters['C'] = np.random.normal(loc=self.meanC, scale=self.stdC)
             if yarray == None or len(tarray)!=len(yarray):
                 parameters['tc'] = np.random.uniform(low=np.min(tarray),
                                                      high=np.max(tarray))
@@ -82,14 +103,6 @@ class LPPLGeneticAlgorithm:
                        
     def mutate(self, parameters, tarray, yarray):
         mut_parameters = {}
-        '''        
-        mut_parameters['A'] = np.random.normal(loc=parameters['A'], 
-                                               scale=self.stdA)
-        mut_parameters['B'] = np.random.normal(loc=parameters['B'],
-                                               scale=self.stdB)
-        mut_parameters['C'] = np.random.normal(loc=parameters['C'],
-                                               scale=self.stdC)
-        '''
         mut_parameters['tc'] = np.random.normal(loc=parameters['tc'],
                                                 scale=self.stdtc)
         mut_parameters['phi'] = np.random.normal(loc=parameters['phi'])
@@ -112,12 +125,8 @@ class LPPLGeneticAlgorithm:
         return offspring
                        
     def mutate_population(self, parameters_pop, tarray, yarray, mutprob=0.75):
-        mut_param_pop = []
-        for parameters in parameters_pop:
-            rnd = np.random.uniform()
-            if rnd < mutprob:
-                mut_param_pop.append(self.mutate(parameters, tarray, yarray))
-        return mut_param_pop
+        return mutate_pop_abstract((self, parameters_pop, tarray, yarray, 
+                                    mutprob))
         
     def breed_population(self, parameters_pop, tarray, yarray,
                          reproduceprob=0.25):
@@ -133,22 +142,10 @@ class LPPLGeneticAlgorithm:
             selected_parents.append(pop_indices[idx])
             del pop_indices[idx]
             
-        offsprings = []
-        married_couples = [(selected_parents[i], selected_parents[i+1]) for i in range(0, len(selected_parents), 2)]
-        for couple in married_couples:
-            param1 = parameters_pop[couple[0]]
-            param2 = parameters_pop[couple[1]]
-            offspring = self.breed(param1, param2)
-            linear_parameters = self.solve_linear_parameters(tarray, yarray,
-                                                             offspring['tc'],
-                                                             offspring['z'],
-                                                             offspring['omega'],
-                                                             offspring['phi'])
-            for param_name in linear_parameters:
-                offspring[param_name] = linear_parameters[param_name]
-            offsprings.append(offspring)
-            
-        return offsprings
+        married_couples = [(parameters_pop[selected_parents[i]], 
+                            parameters_pop[selected_parents[i+1]]) for i in range(0, len(selected_parents), 2)]            
+        return breed_married_couples_abstract((self, married_couples,
+                                               tarray, yarray))
         
     def cull_population(self, parameters_pop, tarray, yarray, size=500):
         costs = map(lambda param: lpplcostfunc_dictparam(tarray, yarray, param),
