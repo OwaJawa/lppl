@@ -41,8 +41,9 @@ def breed_married_couples_abstract((alg, married_couples, tarray, yarray)):
         offsprings.append(offspring)
     return offsprings
 
-def lpplcostfunc_dictparam_abstract((tarray, yarray, param)):
-    return lpplcostfunc_dictparam(tarray, yarray, param)
+def lpplcostfunc_dictparam_batch_abstract((tarray, yarray, param_pop)):
+    return map(lambda param: lpplcostfunc_dictparam(tarray, yarray, param),
+               param_pop)
 
 class LPPLGeneticAlgorithm:
     def __init__(self):
@@ -249,5 +250,5 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
         param_pop_lists = [(tarray, yarray,
                             parameters_pop[idx:min(idx, len(parameters_pop))]) for idx in range(0, len(parameters_pop), numperthread)]
         
-        costs = map(lpplcostfunc_dictparam_abstract, param_pop_lists)
+        costs = map(lpplcostfunc_dictparam_batch_abstract, param_pop_lists)
         return self.cull_param_costs(parameters_pop, costs, size)
