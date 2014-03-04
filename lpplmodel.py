@@ -33,3 +33,15 @@ def lppl_costfunction(tarray, yarray, A=569.988, B=-266.943, C=-14.242,
     if (len(crashedtyarray) > 0):
         crashed_cost = np.sum(np.array(map(lambda item: (item[1]-peak_y)**2, crashedtyarray))) / len(crashedtyarray)
     return costfunction(filter_tarray, filter_yarray, model) + crashed_cost
+    
+def lppl_dictparam(tarray, parameters):
+    return lppl(tarray, A=parameters['A'], B=parameters['B'],
+                C=parameters['C'], tc=parameters['tc'], 
+                phi=parameters['phi'], omega=parameters['omega'],
+                z=parameters['z'])       
+                
+def lpplcostfunc_dictparam(tarray, yarray, parameters):
+    return lppl_costfunction(tarray, yarray, A=parameters['A'], 
+                             B=parameters['B'], C=parameters['C'], 
+                             tc=parameters['tc'], phi=parameters['phi'],
+                             omega=parameters['omega'], z=parameters['z'])
