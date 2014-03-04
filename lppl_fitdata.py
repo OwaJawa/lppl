@@ -5,7 +5,7 @@ Created on Tue Dec 24 16:47:38 2013
 @author: hok1
 """
 
-from lpplfit import LPPLGeneticAlgorithm
+from lpplfit import LPPLGeneticAlgorithm, PoolLPPLGeneticAlgorithm
 import numpy as np
 import argparse
 from datetime import datetime as dt
@@ -51,9 +51,9 @@ def readData(filename, decimal_year=True, lowlimit=None, uplimit=None):
     return tarray, yarray
 
 def lpplfit_workflow(tarray, parray, param_pop_size, max_iter, mutprob, 
-                     reproduceprob):
+                     reproduceprob, numthreads=1):
     yarray = np.log(parray)
-    fitalg = LPPLGeneticAlgorithm()
+    fitalg = LPPLGeneticAlgorithm() if numthreads==1 else PoolLPPLGeneticAlgorithm(numthreads=numthreads)
     param_pop = fitalg.generate_init_population(tarray, yarray,
                                                 size=param_pop_size)
     param_pop, costs_iter = fitalg.perform(tarray, yarray, 
@@ -86,6 +86,8 @@ def get_argvparser():
                              help='lower limit (default=None)')
     argv_parser.add_argument('--uplimit', type=str, default=None,
                              help='upper limit (default=None)')
+    argv_parser.add_argument('--numthreads', type=int, default=1,
+                             help='number of threads (default=1)')
     return argv_parser
     
 if __name__ == '__main__':
@@ -109,7 +111,8 @@ if __name__ == '__main__':
     
     res_param = lpplfit_workflow(tarray, parray, args.parampopsize,
                                  args.maxiter, args.mutprob,
-                                 args.reproduceprob)
+                                 args.reproduceprob, 
+                                 numthreads=args.numthreads)
     
     print 'Results: '
     print 'A = ', res_param['A']
