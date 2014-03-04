@@ -41,6 +41,9 @@ def breed_married_couples_abstract((alg, married_couples, tarray, yarray)):
         offsprings.append(offspring)
     return offsprings
 
+def lpplcostfunc_dictparam_abstract((tarray, yarray, param)):
+    return lpplcostfunc_dictparam(tarray, yarray, param)
+
 class LPPLGeneticAlgorithm:
     def __init__(self):
         self.meanA = 600
@@ -151,9 +154,7 @@ class LPPLGeneticAlgorithm:
         return breed_married_couples_abstract((self, married_couples,
                                                tarray, yarray))
         
-    def cull_population(self, parameters_pop, tarray, yarray, size=500):
-        costs = map(lambda param: lpplcostfunc_dictparam(tarray, yarray, param),
-                    parameters_pop)
+    def cull_param_costs(self, parameters_pop, costs, size):
         param_cost_pairs = zip(parameters_pop, costs)
         param_cost_pairs = filter(lambda pair: not np.isnan(pair[1]),
                                   param_cost_pairs)
@@ -161,7 +162,12 @@ class LPPLGeneticAlgorithm:
         if (len(param_cost_pairs) < size):
             return map(lambda item: item[0], param_cost_pairs)
         else:
-            return map(lambda item: item[0], param_cost_pairs[0:size])
+            return map(lambda item: item[0], param_cost_pairs[0:size])        
+        
+    def cull_population(self, parameters_pop, tarray, yarray, size=500):
+        costs = map(lambda param: lpplcostfunc_dictparam(tarray, yarray, param),
+                    parameters_pop)
+        return self.cull_param_costs(parameters_pop, costs, size)
         
     def reproduce(self, tarray, yarray, param_pop, size=500, mutprob=0.75,
                   reproduceprob=0.25):
@@ -229,23 +235,19 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
         
     def breed_population(self, parameters_pop, tarray, yarray,
                          reproduceprob=0.25):
+        match_couples = self.match_singles(parameters_pop, reproduceprob)
+        numperthread = int(np.ceil(float(len(match_couples))/self.numthreads))
+        match_couples_list = [(self, match_couples[idx:min(idx, len(match_couples))],
+                               tarray, yarray) for idx in range(0, len(match_couples), numperthread)]
         breed_workers = Pool(processes=self.numthreads)
-        breed_param_pop_lists = breed_workers.map(lambda breed_prob: super(PoolLPPLGeneticAlgorithm, self).breed_population(parameters_pop, tarray, yarray, reproduceprob=breed_prob),
-                                                  [(reproduceprob/self.numthreads) for i in range(self.numthreads)])
+        breed_param_pop_lists = breed_workers.map(breed_married_couples_abstract,
+                                                  match_couples_list)
         return reduce(add, breed_param_pop_lists)
         
     def cull_population(self, parameters_pop, tarray, yarray, size=500):
         numperthread = int(np.ceil(float(len(parameters_pop))/self.numthreads))
-        param_pop_lists = [parameters_pop[idx:min(idx, len(parameters_pop))] for idx in range(0, len(parameters_pop), numperthread)]
-        culler = Pool(processes=self.numthreads)
-        costs_lists = culler.map(lambda param_pop: self.lpplcostfunc(tarray, yarray, param_pop),
-                                 param_pop_lists)
-        costs = reduce(add, costs_lists)
-        param_cost_pairs = zip(parameters_pop, costs)
-        param_cost_pairs = filter(lambda pair: not np.isnan(pair[1]),
-                                  param_cost_pairs)
-        param_cost_pairs = sorted(param_cost_pairs, key=lambda item: item[1])
-        if (len(param_cost_pairs) < size):
-            return map(lambda item: item[0], param_cost_pairs)
-        else:
-            return map(lambda item: item[0], param_cost_pairs[0:size])
+        param_pop_lists = [(tarray, yarray,
+                            parameters_pop[idx:min(idx, len(parameters_pop))]) for idx in range(0, len(parameters_pop), numperthread)]
+        
+        costs = map(lpplcostfunc_dictparam_abstract, param_pop_lists)
+        return self.cull_param_costs(parameters_pop, costs, size)
