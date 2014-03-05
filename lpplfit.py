@@ -226,7 +226,7 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
         
     def mutate_population(self, parameters_pop, tarray, yarray, mutprob=0.75):
         numperthread = int(np.ceil(float(len(parameters_pop))/self.numthreads))
-        param_pop_lists = [(self, parameters_pop[idx:min(idx, len(parameters_pop))],
+        param_pop_lists = [(self, parameters_pop[idx:min(idx+numperthread, len(parameters_pop))],
                             tarray, yarray, 
                             mutprob) for idx in range(0, len(parameters_pop), numperthread)]
         mutation_workers = Pool(processes=self.numthreads)
@@ -238,7 +238,7 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
                          reproduceprob=0.25):
         match_couples = self.match_singles(parameters_pop, reproduceprob)
         numperthread = int(np.ceil(float(len(match_couples))/self.numthreads))
-        match_couples_list = [(self, match_couples[idx:min(idx, len(match_couples))],
+        match_couples_list = [(self, match_couples[idx:min(idx+numperthread, len(match_couples))],
                                tarray, yarray) for idx in range(0, len(match_couples), numperthread)]
         breed_workers = Pool(processes=self.numthreads)
         breed_param_pop_lists = breed_workers.map(breed_married_couples_abstract,
@@ -248,7 +248,9 @@ class PoolLPPLGeneticAlgorithm(LPPLGeneticAlgorithm):
     def cull_population(self, parameters_pop, tarray, yarray, size=500):
         numperthread = int(np.ceil(float(len(parameters_pop))/self.numthreads))
         param_pop_lists = [(tarray, yarray,
-                            parameters_pop[idx:min(idx, len(parameters_pop))]) for idx in range(0, len(parameters_pop), numperthread)]
-        
-        costs = map(lpplcostfunc_dictparam_batch_abstract, param_pop_lists)
+                            parameters_pop[idx:min(idx+numperthread, len(parameters_pop))]) for idx in range(0, len(parameters_pop), numperthread)]
+        culler = Pool(processes=self.numthreads)
+        costs_list = culler.map(lpplcostfunc_dictparam_batch_abstract, 
+                                param_pop_lists)
+        costs = reduce(add, costs_list)
         return self.cull_param_costs(parameters_pop, costs, size)
