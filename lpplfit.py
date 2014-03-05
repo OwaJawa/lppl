@@ -18,12 +18,11 @@ class InconsistentParameterSizeException(Exception):
         self.message = 'Inconsistent parameter size: '+str(num1)+' vs. '+str(num2)
 
 def mutate_pop_abstract((alg, parameters_pop, tarray, yarray, mutprob)):
-    mut_param_pop = []
-    for parameters in parameters_pop:
-        rnd = np.random.uniform()
-        if rnd < mutprob:
-            mut_param_pop.append(alg.mutate(parameters, tarray, yarray))
-    return mut_param_pop
+    rnds = np.random.uniform(size=len(parameters_pop))
+    filtered_pairs = filter(lambda pair: pair[1]<mutprob,
+                            zip(parameters_pop, rnds))
+    return map(lambda pair: alg.mutate(pair[0], tarray, yarray),
+               filtered_pairs)
     
 def breed_married_couples_abstract((alg, married_couples, tarray, yarray)):
     offsprings = []
