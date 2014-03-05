@@ -9,6 +9,7 @@ from lpplfit import LPPLGeneticAlgorithm, PoolLPPLGeneticAlgorithm
 import numpy as np
 import argparse
 from datetime import datetime as dt
+import time
 
 def DiscreteDaytoYearFraction(year, month, day):
     wholeyear = dt(year+1, 1, 1).toordinal() - dt(year, 1, 1).toordinal()
@@ -104,16 +105,25 @@ if __name__ == '__main__':
     tarray, parray = readData(args.filename, 
                               decimal_year=(not args.stringdate),
                               lowlimit=lowlimit, uplimit=uplimit)
-    
+    '''
     for t, p in zip(tarray, parray):
         print t, '\t', p
     print 'Number of points = ', len(tarray)
+    '''
+    
+    exe_datetime = time.strftime('%x')+' '+time.strftime('%X')
     
     res_param = lpplfit_workflow(tarray, parray, args.parampopsize,
                                  args.maxiter, args.mutprob,
                                  args.reproduceprob, 
                                  numthreads=args.numthreads)
     
+    line_to_print = '\t'.join([exe_datetime, str(lowlimit), str(uplimit),
+                               str(args.maxiter)])
+    line_to_print += '\t'+'\t'.join(map(lambda key: str(res_param[key]), 
+                                        ['A', 'B', 'C', 'phi', 'omega', 'z', 'tc']))
+    print line_to_print
+    '''
     print 'Results: '
     print 'A = ', res_param['A']
     print 'B = ', res_param['B']
@@ -122,4 +132,4 @@ if __name__ == '__main__':
     print 'omega = ', res_param['omega']
     print 'z = ', res_param['z']
     print 'tc = ', res_param['tc']
-        
+    '''
