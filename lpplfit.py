@@ -83,13 +83,8 @@ class LPPLGeneticAlgorithm:
         init_parameters_pop = []
         for i in range(size):
             parameters = {}
-            if yarray == None or len(tarray)!=len(yarray):
-                parameters['tc'] = np.random.uniform(low=np.min(tarray),
-                                                     high=np.max(tarray))
-            else:
-                expectedtc, peaky = max(zip(tarray, yarray),
-                                         key=lambda item: item[1])
-                parameters['tc'] = np.random.normal(loc=expectedtc, scale=0.2)                
+            parameters['tc'] = np.random.uniform(low=np.max(tarray),
+                                                 high=np.max(tarray)+5)
             parameters['phi'] = np.random.normal()
             parameters['omega'] = np.random.normal(loc=np.pi*2)
             parameters['z'] = np.random.uniform()
@@ -102,12 +97,13 @@ class LPPLGeneticAlgorithm:
                 parameters[param_name] = linear_parameters[param_name]
             init_parameters_pop.append(parameters)
         return init_parameters_pop
-
                        
     def mutate(self, parameters, tarray, yarray):
         mut_parameters = {}
         mut_parameters['tc'] = np.random.normal(loc=parameters['tc'],
                                                 scale=self.stdtc)
+        if mut_parameters['tc'] < np.max(tarray):
+            mut_parameters['tc'] += 2*(np.max(tarray)-mut_parameters['tc'])
         mut_parameters['phi'] = np.random.normal(loc=parameters['phi'])
         mut_parameters['omega'] = np.random.normal(loc=parameters['omega'])
         mut_parameters['z'] = np.random.normal(loc=parameters['z'], scale=0.05)
