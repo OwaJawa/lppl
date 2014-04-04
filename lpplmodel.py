@@ -23,6 +23,7 @@ def costfunction(tarray, yarray, model):
     
 def lppl_costfunction(tarray, yarray, A=569.988, B=-266.943, C=-14.242,
                       tc=1930.218, phi=-4.1, omega=7.877, z=0.445):
+    '''
     tyarray = filter(lambda item: item[0]<tc, zip(tarray, yarray))
     filter_tarray = np.array(map(lambda item: item[0], tyarray))
     filter_yarray = np.array(map(lambda item: item[1], tyarray))
@@ -33,6 +34,14 @@ def lppl_costfunction(tarray, yarray, A=569.988, B=-266.943, C=-14.242,
     if (len(crashedtyarray) > 0):
         crashed_cost = np.sum(np.array(map(lambda item: (item[1]-peak_y)**2, crashedtyarray))) / len(crashedtyarray)
     return costfunction(filter_tarray, filter_yarray, model) + crashed_cost
+    '''
+    model = partial(lppl, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z)
+    maxt = np.max(tarray)
+    if tc < maxt:
+        return float('inf')
+    else:
+        return costfunction(tarray, yarray, model)
+    
     
 def lppl_dictparam(tarray, parameters):
     return lppl(tarray, A=parameters['A'], B=parameters['B'],
