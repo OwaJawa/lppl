@@ -6,6 +6,7 @@ Created on Tue Dec 24 16:47:38 2013
 """
 
 from lpplfit import LPPLGeneticAlgorithm, PoolLPPLGeneticAlgorithm
+from pele_lpplfit import LPPLPeleAlgorithm
 import numpy as np
 import argparse
 from datetime import datetime as dt
@@ -65,6 +66,12 @@ def lpplfit_workflow(tarray, parray, param_pop_size, max_iter, mutprob,
     res_param = fitalg.grad_optimize(tarray, yarray, param_pop[0])
     return res_param
 
+def pele_lpplfit_workflow(tarray, parray):
+    yarray = np.log(parray)
+    fitalg = LPPLPeleAlgorithm()
+    res_param = fitalg.rolling_peaks_price_gyrations(tarray, yarray)
+    return res_param
+
 def get_argvparser():
     prog_descp = 'Read the financial data from the input file, '
     prog_descp += 'the first column being the year and second column prices, '
@@ -89,6 +96,9 @@ def get_argvparser():
                              help='upper limit (default=None)')
     argv_parser.add_argument('--numthreads', type=int, default=1,
                              help='number of threads (default=1)')
+    argv_parser.add_argument('--pelealg',
+                             help='using Pele''s algorithm',
+                             action='store_true')
     return argv_parser
     
 if __name__ == '__main__':
@@ -101,35 +111,23 @@ if __name__ == '__main__':
     else:
         lowlimit = None if args.lowlimit==None else float(args.lowlimit)
         uplimit = None if args.uplimit==None else float(args.uplimit)
-    
+
     tarray, parray = readData(args.filename, 
                               decimal_year=(not args.stringdate),
                               lowlimit=lowlimit, uplimit=uplimit)
-    '''
-    for t, p in zip(tarray, parray):
-        print t, '\t', p
-    print 'Number of points = ', len(tarray)
-    '''
     
     exe_datetime = time.strftime('%x')+' '+time.strftime('%X')
-    
-    res_param = lpplfit_workflow(tarray, parray, args.parampopsize,
-                                 args.maxiter, args.mutprob,
-                                 args.reproduceprob, 
-                                 numthreads=args.numthreads)
+
+    if args.pelealg:
+        res_param = pele_lpplfit_workflow(tarray, parray)
+    else:
+        res_param = lpplfit_workflow(tarray, parray, args.parampopsize,
+                                     args.maxiter, args.mutprob,
+                                     args.reproduceprob,
+                                     numthreads=args.numthreads)
     
     line_to_print = '\t'.join([exe_datetime, str(lowlimit), str(uplimit),
                                str(args.maxiter)])
     line_to_print += '\t'+'\t'.join(map(lambda key: str(res_param[key]), 
                                         ['A', 'B', 'C', 'phi', 'omega', 'z', 'tc']))
     print line_to_print
-    '''
-    print 'Results: '
-    print 'A = ', res_param['A']
-    print 'B = ', res_param['B']
-    print 'C = ', res_param['C']
-    print 'phi = ', res_param['phi']
-    print 'omega = ', res_param['omega']
-    print 'z = ', res_param['z']
-    print 'tc = ', res_param['tc']
-    '''

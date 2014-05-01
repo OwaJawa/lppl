@@ -2,7 +2,6 @@ import palshikar_peaks as peak
 import numpy as np
 import lpplmodel
 from scipy.optimize import root
-from functools import partial
 
 class LPPLPeleAlgorithm:
     def __init__(self):
@@ -15,21 +14,24 @@ class LPPLPeleAlgorithm:
         self.stdtc = 5
 
     def rolling_peaks_price_gyrations(self, tarray, yarray):
-        delta_t = np.mean([tarray[i+1]-tarray[i] for i in range(len(tarray)-1)])
+        #delta_t = np.mean([tarray[i+1]-tarray[i] for i in range(len(tarray)-1)])
         z = 0.5
         sol = {}
+        peaks = peak.peaks(yarray, 3, h=1.5)
         for m in range(len(yarray)):
-            peaks = peak.peaks(yarray, 3, h=1.5)
+            print 'm = ', m
             if len(peaks) < 3:
                 continue
             i = np.random.randint(0, len(peaks)-2)
             j = i+1
             k = i+2
 
-            rho = float(tarray[j]-tarray[i])/float(tarray[k]-tarray[j])
-            tc = (rho*tarray[k]-tarray[j])/(rho-delta_t)
+            rho = float(tarray[peaks[j]]-tarray[peaks[i]])/float(tarray[peaks[k]]-tarray[peaks[j]])
+            tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
             omega = 2*np.pi/np.log(rho)
-            phi = np.pi - omega*np.log(tc-tarray[k])
+            phi = np.pi - omega*np.log(tc-tarray[peaks[k]])
+
+            print 'rho=', rho, ' tc=', tc
 
             ols_sol = self.solve_linear_parameters(tarray, yarray, tc, z, omega, phi)
             A = ols_sol['A']
@@ -37,8 +39,7 @@ class LPPLPeleAlgorithm:
             C = ols_sol['C']
 
             # applying LMA here
-            partmodel = partial(self.costmin_wrt_z, tarray=tarray, yarray=yarray,
-                                A=A, B=B, C=C, tc=tc, phi=phi, omega=omega)
+            partmodel = lambda z: self.costmin_wrt_z(tarray, yarray, A, B, C, tc, z, omega, phi)
             lmsol = root(partmodel, z, jac=True, method='lm')
             z = lmsol.z
 
