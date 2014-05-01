@@ -25,6 +25,7 @@ class LPPLPeleAlgorithm:
             i = np.random.randint(0, len(peaks)-2)
             j = i+1
             k = i+2
+            print tarray[peaks[i]], tarray[peaks[j]], tarray[peaks[k]]
 
             rho = float(tarray[peaks[j]]-tarray[peaks[i]])/float(tarray[peaks[k]]-tarray[peaks[j]])
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
