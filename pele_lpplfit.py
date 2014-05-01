@@ -1,6 +1,8 @@
 import palshikar_peaks as peak
 import numpy as np
 import lpplmodel
+from scipy.optimize import root
+from functools import partial
 
 class LPPLPeleAlgorithm:
     def __init__(self):
@@ -15,6 +17,7 @@ class LPPLPeleAlgorithm:
     def rolling_peaks_price_gyrations(self, tarray, yarray):
         delta_t = np.mean([tarray[i+1]-tarray[i] for i in range(len(tarray)-1)])
         z = 0.5
+        sol = {}
         for m in range(len(yarray)):
             peaks = peak.peaks(yarray, 3, h=1.5)
             if len(peaks) < 3:
@@ -34,8 +37,14 @@ class LPPLPeleAlgorithm:
             C = ols_sol['C']
 
             # applying LMA here
+            partmodel = partial(self.costmin_wrt_z, tarray=tarray, yarray=yarray,
+                                A=A, B=B, C=C, tc=tc, phi=phi, omega=omega)
+            lmsol = root(partmodel, z, jac=True, method='lm')
+            z = lmsol.z
 
-            sol = {'A': A, 'B': B, 'C': C, 'z': z, 'omega': omega, 'tc': tc, 'phi': phi, }
+            sol = {'A': A, 'B': B, 'C': C, 'z': z, 'omega': omega, 'tc': tc, 'phi': phi}
+
+        return sol
 
     def solve_linear_parameters(self, tarray, yarray, tc, z, omega, Phi):
         f = lambda t: (tc-t)**z if tc>=t else (t-tc)**z
@@ -61,3 +70,12 @@ class LPPLPeleAlgorithm:
 
         sol = np.linalg.pinv(A)*b
         return {'A': sol[0, 0], 'B': sol[1, 0], 'C': sol[2, 0]}
+
+    def costmin_wrt_z(self, tarray, yarray, A, B, C, tc, phi, omega, z):
+        term = np.log(tc-tarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
+        costmin = 2./len(tarray)*np.sum(term)
+
+        term1 = (np.log(tc-tarray)**2)*(2*lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray-A)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
+        costminder = 2./len(tarray)*np.sum(term1)
+
+        return costmin, costminder

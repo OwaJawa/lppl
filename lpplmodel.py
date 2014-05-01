@@ -37,10 +37,7 @@ def lppl_costfunction(tarray, yarray, A=569.988, B=-266.943, C=-14.242,
     '''
     model = partial(lppl, A=A, B=B, C=C, tc=tc, phi=phi, omega=omega, z=z)
     maxt = np.max(tarray)
-    if tc < maxt:
-        return float('inf')
-    else:
-        return costfunction(tarray, yarray, model)
+    return float('inf') if tc < maxt else costfunction(tarray, yarray, model)
     
     
 def lppl_dictparam(tarray, parameters):
