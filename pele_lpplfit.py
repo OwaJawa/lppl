@@ -25,14 +25,14 @@ class LPPLPeleAlgorithm:
             i = np.random.randint(0, len(peaks)-2)
             j = i+1
             k = i+2
-            print tarray[peaks[i]], tarray[peaks[j]], tarray[peaks[k]]
+            #print tarray[peaks[i]], tarray[peaks[j]], tarray[peaks[k]]
 
             rho = float(tarray[peaks[j]]-tarray[peaks[i]])/float(tarray[peaks[k]]-tarray[peaks[j]])
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
             omega = 2*np.pi/np.log(rho)
             phi = np.pi - omega*np.log(tc-tarray[peaks[k]])
 
-            print 'rho=', rho, ' tc=', tc
+            #print 'rho=', rho, ' tc=', tc
 
             ols_sol = self.solve_linear_parameters(tarray, yarray, tc, z, omega, phi)
             A = ols_sol['A']
@@ -75,6 +75,7 @@ class LPPLPeleAlgorithm:
 
     def costmin_wrt_z(self, tarray, yarray, A, B, C, tc, phi, omega, z):
         term = np.log(tc-tarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
+        print term
         costmin = 2./len(tarray)*np.sum(term)
 
         term1 = (np.log(tc-tarray)**2)*(2*lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray-A)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
