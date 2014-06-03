@@ -48,6 +48,7 @@ def readData(filename, decimal_year=True, lowlimit=None, uplimit=None):
     data = zip(data[0], data[1])
     data = filter(lambda datum: datum[0]>=lowlimit and datum[0]<=uplimit,
                   data)
+    data = sorted(data, key=lambda datum: datum[0])
     tarray = np.array(map(lambda datum: datum[0], data))
     yarray = np.array(map(lambda datum: datum[1], data))
     return tarray, yarray
