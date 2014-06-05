@@ -19,6 +19,9 @@ class LPPLPeleAlgorithm:
         z = 0.5
         sol = {}
         peaks = peak.peaks(yarray, 3, h=1.5)
+        print peaks
+        print tarray[peaks]
+        raw_input('enter:')
         for m in range(len(yarray)):
             print 'm = ', m
             if len(peaks) < 3:
@@ -32,6 +35,8 @@ class LPPLPeleAlgorithm:
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
             if tc < maxt:
                 continue
+            elif np.log(tc) - np.log(maxt) >= 1:
+                continue
             omega = 2*np.pi/np.log(rho)
             phi = np.pi - omega*np.log(tc-tarray[peaks[k]])
 
@@ -44,7 +49,7 @@ class LPPLPeleAlgorithm:
             partmodel = lambda z: self.costmin_wrt_z(tarray, yarray, A, B, C, tc, phi, omega, z)
             lmsol = root(partmodel, z, jac=True, method='lm')
             z = lmsol.x[0]
-            print z
+            print z, tc
 
             sol = {'A': A, 'B': B, 'C': C, 'z': z, 'omega': omega, 'tc': tc, 'phi': phi}
 
@@ -80,7 +85,6 @@ class LPPLPeleAlgorithm:
         for t, y in zip(tarray, yarray):
             sumterm += np.log(tc-t)*(lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-y)*(lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-A)
         costmin = 2./len(tarray)*sumterm
-        print A, B, C, tc, phi, omega, z
         #term = np.log(tc-tarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
         #costmin = 2./len(tarray)*np.sum(term)
 
