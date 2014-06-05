@@ -15,6 +15,7 @@ class LPPLPeleAlgorithm:
 
     def rolling_peaks_price_gyrations(self, tarray, yarray):
         #delta_t = np.mean([tarray[i+1]-tarray[i] for i in range(len(tarray)-1)])
+        maxt = np.max(tarray)
         z = 0.5
         sol = {}
         peaks = peak.peaks(yarray, 3, h=1.5)
@@ -29,10 +30,10 @@ class LPPLPeleAlgorithm:
 
             rho = float(tarray[peaks[j]]-tarray[peaks[i]])/float(tarray[peaks[k]]-tarray[peaks[j]])
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
+            if tc < maxt:
+                continue
             omega = 2*np.pi/np.log(rho)
             phi = np.pi - omega*np.log(tc-tarray[peaks[k]])
-
-            #print 'rho=', rho, ' tc=', tc
 
             ols_sol = self.solve_linear_parameters(tarray, yarray, tc, z, omega, phi)
             A = ols_sol['A']
@@ -40,9 +41,10 @@ class LPPLPeleAlgorithm:
             C = ols_sol['C']
 
             # applying LMA here
-            partmodel = lambda z: self.costmin_wrt_z(tarray, yarray, A, B, C, tc, z, omega, phi)
+            partmodel = lambda z: self.costmin_wrt_z(tarray, yarray, A, B, C, tc, phi, omega, z)
             lmsol = root(partmodel, z, jac=True, method='lm')
-            z = lmsol.z
+            z = lmsol.x[0]
+            print z
 
             sol = {'A': A, 'B': B, 'C': C, 'z': z, 'omega': omega, 'tc': tc, 'phi': phi}
 
@@ -74,11 +76,19 @@ class LPPLPeleAlgorithm:
         return {'A': sol[0, 0], 'B': sol[1, 0], 'C': sol[2, 0]}
 
     def costmin_wrt_z(self, tarray, yarray, A, B, C, tc, phi, omega, z):
-        term = np.log(tc-tarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
-        print term
-        costmin = 2./len(tarray)*np.sum(term)
+        sumterm = 0.0
+        for t, y in zip(tarray, yarray):
+            sumterm += np.log(tc-t)*(lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-y)*(lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-A)
+        costmin = 2./len(tarray)*sumterm
+        print A, B, C, tc, phi, omega, z
+        #term = np.log(tc-tarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
+        #costmin = 2./len(tarray)*np.sum(term)
 
-        term1 = (np.log(tc-tarray)**2)*(2*lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray-A)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
-        costminder = 2./len(tarray)*np.sum(term1)
+        sumderterm = 0.0
+        for t, y in zip(tarray, yarray):
+            sumderterm += (np.log(tc-t)**2)*(2*lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-y-A)*(lpplmodel.lppl(t,A,B,C,tc,phi,omega,z)-A)
+        #term1 = (np.log(tc-tarray)**2)*(2*lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-yarray-A)*(lpplmodel.lppl(tarray,A,B,C,tc,phi,omega,z)-A)
+        #costminder = 2./len(tarray)*np.sum(term1)
+        costminder = 2./len(tarray)*sumderterm
 
         return costmin, costminder
