@@ -18,7 +18,7 @@ class LPPLPeleAlgorithm:
         maxt = np.max(tarray)
         z = 0.5
         sol = {}
-        peaks = peak.peaks(yarray, 3, h=1.5)
+        peaks = peak.peaks(yarray, 5, h=1.5)
         print peaks
         print tarray[peaks]
         raw_input('enter:')
@@ -35,8 +35,8 @@ class LPPLPeleAlgorithm:
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
             if tc < maxt:
                 continue
-            elif np.log(tc) - np.log(maxt) >= 1:
-                continue
+            #elif np.log(tc) - np.log(maxt) >= 1:
+            #    continue
             omega = 2*np.pi/np.log(rho)
             phi = np.pi - omega*np.log(tc-tarray[peaks[k]])
 
