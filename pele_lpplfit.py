@@ -23,7 +23,6 @@ class LPPLPeleAlgorithm:
         print tarray[peaks]
         raw_input('enter:')
         for m in range(len(yarray)):
-            print 'm = ', m
             if len(peaks) < 3:
                 continue
             i = np.random.randint(0, len(peaks)-2)
@@ -33,6 +32,7 @@ class LPPLPeleAlgorithm:
 
             rho = float(tarray[peaks[j]]-tarray[peaks[i]])/float(tarray[peaks[k]]-tarray[peaks[j]])
             tc = (rho*tarray[peaks[k]]-tarray[peaks[j]])/(rho-1)
+            print 'm = ', m, 'tc = ', tc, 'z = ', z
             if tc < maxt:
                 continue
             #elif np.log(tc) - np.log(maxt) >= 1:
@@ -49,7 +49,6 @@ class LPPLPeleAlgorithm:
             partmodel = lambda z: self.costmin_wrt_z(tarray, yarray, A, B, C, tc, phi, omega, z)
             lmsol = root(partmodel, z, jac=True, method='lm')
             z = lmsol.x[0]
-            print z, tc
 
             sol = {'A': A, 'B': B, 'C': C, 'z': z, 'omega': omega, 'tc': tc, 'phi': phi}
 
